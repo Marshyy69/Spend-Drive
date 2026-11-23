@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Spend &amp; Drive</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+
+  <!-- Styles: edit colours and fonts in base.css, everything else in its own file -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/spending.css">
+  <link rel="stylesheet" href="css/car.css">
+</head>
+<body>
+  <div class="topband" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+  <div class="status" id="status" role="alert" hidden></div>
+
+  <!-- LOGIN -->
+  <div class="login" id="login-view" hidden>
+    <form class="card login-card" id="login-form" novalidate>
+      <h1>Spend &amp; Drive</h1>
+      <p class="sub">Sign in to see your spending and car records.</p>
+      <label class="f"><span>Email</span><input type="email" id="login-email" autocomplete="username" required></label>
+      <label class="f"><span>Password</span><input type="password" id="login-pass" autocomplete="current-password" required></label>
+      <button class="btn" type="submit">Sign in</button>
+      <p class="msg" id="login-msg" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <!-- APP -->
+  <div class="shell" id="app-view" hidden>
+    <header class="head">
+      <div class="brand"><h1>Spend &amp; Drive</h1><p id="today-line"></p></div>
+      <div class="head-right">
+        <nav class="tabs" role="tablist" aria-label="Sections">
+          <button role="tab" id="tab-spending" data-tab="spending" aria-selected="true" aria-controls="view-spending">Spending</button>
+          <button role="tab" id="tab-car" data-tab="car" aria-selected="false" aria-controls="view-car">Car</button>
+        </nav>
+        <button class="btn ghost small" type="button" data-action="signout">Sign out</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- SPENDING -->
+      <section class="panel" id="view-spending" role="tabpanel" aria-labelledby="tab-spending">
+        <div class="bar-row">
+          <div class="monthnav">
+            <button class="ib" data-action="month-prev" aria-label="Previous month" type="button">&#8249;</button>
+            <strong id="month-label"></strong>
+            <button class="ib" data-action="month-next" id="month-next" aria-label="Next month" type="button">&#8250;</button>
+          </div>
+        </div>
+        <div class="tiles" id="sp-tiles"></div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="cardhead"><h2>Where it went</h2><span class="sub">Tap a category to filter the list</span></div>
+            <ul class="cats" id="sp-cats"></ul>
+          </div>
+          <div class="card">
+            <div class="cardhead"><h2>Last six months</h2><span class="sub">Tap a bar to open that month</span></div>
+            <div id="sp-trend"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Add an expense</h2>
+          <form class="form" id="exp-form" novalidate>
+            <label class="f"><span>Date</span><input type="date" id="exp-date" required></label>
+            <label class="f"><span>Amount (RM)</span><input type="number" id="exp-amt" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required></label>
+            <label class="f"><span>Category</span><select id="exp-cat"></select></label>
+            <label class="f"><span>Note</span><input type="text" id="exp-note" placeholder="e.g. Lunch, RON95, parking" maxlength="80"></label>
+            <div class="formfoot"><button class="btn" type="submit">Add expense</button><span class="msg" id="exp-msg" role="status" aria-live="polite"></span></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="cardhead">
+            <h2>Transactions</h2>
+            <span class="cardtools"><span class="sub" id="tx-sum"></span><button class="btn ghost small" type="button" data-action="export-exp">Export CSV</button></span>
+          </div>
+          <div class="bar-row">
+            <div class="chips" id="tx-chips"></div>
+            <label class="f search"><span class="sr">Search notes</span><input type="search" id="tx-q" placeholder="Search notes"></label>
+          </div>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Date</th><th>Category</th><th>Note</th><th class="n">Amount</th><th><span class="sr">Remove</span></th></tr></thead>
+            <tbody id="tx-body"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- CAR -->
+      <section class="panel" id="view-car" role="tabpanel" aria-labelledby="tab-car" hidden>
+        <div class="card service">
+          <div class="svhead">
+            <div><h2>Next service</h2><p class="big" id="sv-next"></p></div>
+            <span id="sv-pill"></span>
+          </div>
+          <div class="meter" id="sv-meter"></div>
+          <p class="then" id="sv-then"></p>
+        </div>
+
+        <div class="tiles" id="car-tiles"></div>
+
+        <div class="grid2">
+          <div class="card">
+            <h2>Add a record</h2>
+            <form class="form" id="log-form" novalidate>
+              <label class="f"><span>Date</span><input type="date" id="log-date" required></label>
+              <label class="f"><span>Odometer (km)</span><input type="number" id="log-odo" inputmode="numeric" min="0" step="1" placeholder="e.g. 10120" required></label>
+              <label class="f"><span>Type</span><select id="log-type"><option>Service</option><option>Repair</option><option>Other</option></select></label>
+              <label class="f"><span>Cost (RM)</span><input type="number" id="log-cost" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></label>
+              <label class="f"><span>What was done</span><input type="text" id="log-desc" maxlength="100" placeholder="e.g. Engine oil + filter" required></label>
+              <label class="f"><span>Workshop</span><input type="text" id="log-shop" maxlength="60" placeholder="Optional"></label>
+              <label class="check"><input type="checkbox" id="log-spend" checked><span>Also count the cost in Spending (Car)</span></label>
+              <div class="formfoot"><button class="btn" type="submit">Add record</button><span class="msg" id="log-msg" role="status" aria-live="polite"></span></div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="cardhead"><h2>Renewals and checks</h2><span class="sub">Things that run on dates</span></div>
+            <ul class="rem" id="rem-list"></ul>
+            <form class="form" id="rem-form" novalidate>
+              <label class="f"><span>Name</span><input type="text" id="rem-name" maxlength="50" placeholder="e.g. Road tax" required></label>
+              <label class="f"><span>Due date</span><input type="date" id="rem-due" required></label>
+              <div class="formfoot"><button class="btn small" type="submit">Add reminder</button><span class="msg" id="rem-msg" role="status" aria-live="polite"></span></div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardhead">
+            <h2>Service and repair log</h2>
+            <span class="cardtools"><span class="sub" id="log-sum"></span><button class="btn ghost small" type="button" data-action="export-log">Export CSV</button></span>
+          </div>
+          <div class="chips" id="log-chips"></div>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Date</th><th class="n">Odometer</th><th>Type</th><th>What was done</th><th>Workshop</th><th class="n">Cost</th><th><span class="sr">Remove</span></th></tr></thead>
+            <tbody id="log-body"></tbody>
+          </table></div>
+        </div>
+
+        <div class="card">
+          <h2>Car settings</h2>
+          <form class="form" id="car-form" novalidate>
+            <label class="f"><span>Current odometer (km)</span><input type="number" id="car-odo" inputmode="numeric" min="0" step="1"></label>
+            <label class="f"><span>Service every (km)</span><input type="number" id="car-int" inputmode="numeric" min="1" step="1"></label>
+            <label class="f"><span>Odometer when I got it (km)</span><input type="number" id="car-start" inputmode="numeric" min="0" step="1"></label>
+            <div class="formfoot"><button class="btn" type="submit">Save settings</button><span class="msg" id="car-msg" role="status" aria-live="polite"></span></div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="tip" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

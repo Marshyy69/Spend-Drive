@@ -1,0 +1,96 @@
+/* base.css: colour tokens, fonts, reset. Change the look of the whole site here. */
+
+:root {
+  /* Your five pastel colours */
+  --p1: #ffc8b3;
+  --p2: #efc6c6;
+  --p3: #e0c5d9;
+  --p4: #d1c4ec;
+  --p5: #c2c3ff;
+
+  /* Surfaces and text (light) */
+  --bg: #fbf6f9;
+  --surface: #ffffff;
+  --surface-2: #f6eef4;
+  --ink: #2a2338;
+  --ink-2: #51476a;
+  --muted: #6a5f7f;
+  --line: #e6dbe6;
+  --edge: rgba(42, 35, 56, .38);
+  --on-pastel: #2a2338;
+
+  /* Buttons and emphasis */
+  --accent: #4b3f93;
+  --on-accent: #ffffff;
+
+  /* Summary tiles */
+  --tile1: var(--p1);
+  --tile2: var(--p2);
+  --tile3: var(--p4);
+  --tile4: var(--p5);
+  --bar-soft: var(--p4);
+
+  /* Status colours (always shown with an icon and a word) */
+  --good: #1f6b4a; --good-bg: #d7efe3;
+  --warn: #8a5200; --warn-bg: #fde9c4;
+  --crit: #a6302a; --crit-bg: #fbd9d5;
+
+  /* Fonts */
+  --display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --text: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15111c;
+    --surface: #1f1a2a;
+    --surface-2: #292236;
+    --ink: #f3edf8;
+    --ink-2: #cdc3da;
+    --muted: #a69bb9;
+    --line: #383047;
+    --edge: rgba(0, 0, 0, 0);
+    --accent: #c2c3ff;
+    --on-accent: #1d1830;
+    --tile1: color-mix(in srgb, var(--p1) 24%, var(--surface));
+    --tile2: color-mix(in srgb, var(--p2) 24%, var(--surface));
+    --tile3: color-mix(in srgb, var(--p4) 24%, var(--surface));
+    --tile4: color-mix(in srgb, var(--p5) 24%, var(--surface));
+    --bar-soft: color-mix(in srgb, var(--p4) 42%, var(--surface));
+    --good: #8fd9b0; --good-bg: #223d31;
+    --warn: #f2c06b; --warn-bg: #44341a;
+    --crit: #ffa59c; --crit-bg: #4a2724;
+    color-scheme: dark;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--text);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+button, input, select { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3, .tv, .big { font-family: var(--display); }
+h2 { font-size: 1.05rem; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+[hidden] { display: none !important; }
+
+/* Visually hidden, still read by screen readers */
+.sr { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

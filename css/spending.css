@@ -1,0 +1,27 @@
+/* spending.css: category bars and the six-month chart on the Spending tab */
+
+.cats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.catbtn {
+  width: 100%; display: grid; grid-template-columns: minmax(84px, auto) 1fr auto; align-items: center; gap: 12px;
+  padding: 8px 10px; border-radius: 10px; border: 1px solid transparent; background: transparent;
+  cursor: pointer; text-align: left;
+}
+.catbtn:hover { background: var(--surface-2); }
+.catbtn[aria-pressed="true"] { background: var(--surface-2); border-color: var(--accent); }
+.catname { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.track { height: 12px; border-radius: 0 6px 6px 0; background: var(--surface-2); overflow: hidden; }
+.fill { display: block; height: 100%; border-radius: 0 6px 6px 0; border: 1px solid var(--edge); border-left: 0; }
+.catval { display: flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; font-weight: 600; line-height: 1.25; }
+.catval small { font-weight: 400; color: var(--muted); font-size: .75rem; }
+
+/* Six-month chart (SVG drawn in js/spending.js) */
+.trend { width: 100%; height: auto; display: block; }
+.trend .gl { stroke: var(--line); stroke-width: 1; fill: none; }
+.trend .ax { fill: var(--muted); font: 10px var(--text); }
+.trend .bar { fill: var(--bar-soft); stroke: var(--edge); stroke-width: 1; }
+.trend .bar.sel { fill: var(--accent); stroke: none; }
+.trend .val { fill: var(--ink); font: 600 11px var(--text); }
+.trend .mo { fill: var(--muted); font: 10px var(--text); }
+.trend .mo.sel { fill: var(--ink); font-weight: 700; }
+.trend .hit { fill: transparent; cursor: pointer; }
+.trend .hit:focus-visible { stroke: var(--accent); stroke-width: 2; }
