@@ -6,6 +6,7 @@ import {
   NOW, TODAY, MON, TYPEC, esc, rm, num, fmtDate, monthKey, sum, clamp, daysUntil,
   tile, pill, setMsg, showError, downloadCsv,
 } from './utils.js';
+import { confirmDelete } from './confirm.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -70,7 +71,8 @@ export function renderCar() {
   $('#log-sum').textContent = logs.length + (logs.length === 1 ? ' record' : ' records') + ' · ' + rm(sum(logs, (l) => l.cost));
   $('#log-body').innerHTML = logs.length ? logs.map((l) =>
     '<tr><td>' + fmtDate(l.date) + '</td><td class="n">' + num(l.odo) + ' km</td><td><span class="tag" style="background:' + TYPEC[l.type] + '">' + l.type + '</span></td><td>' + esc(l.desc) + '</td><td>' + esc(l.shop || '—') + '</td><td class="n">' + rm(l.cost) + '</td>' +
-    '<td class="n"><button class="rm" type="button" data-action="del-log" data-id="' + l.id + '" aria-label="Remove ' + esc(l.desc) + '">Remove</button></td></tr>'
+    '<td class="n"><button class="edit-btn" type="button" data-action="edit-log" data-id="' + l.id + '" aria-label="Edit ' + esc(l.desc) + '">Edit</button>' +
+    '<button class="rm" type="button" data-action="del-log" data-id="' + l.id + '" aria-label="Remove ' + esc(l.desc) + '">Remove</button></td></tr>'
   ).join('') : '<tr><td colspan="7" class="empty">No records yet. Add your first service above.</td></tr>';
 
   // Do not overwrite settings the person is typing right now.
@@ -90,12 +92,37 @@ function filteredLogs() {
 export const carActions = {
   'log-filter': (b) => { ui.logType = b.dataset.type; },
   'del-log': async (b) => {
+    const l = state.logs.find((x) => x.id === b.dataset.id);
+    const label = l ? l.desc + ' — ' + rm(l.cost) : 'this record';
+    const ok = await confirmDelete('Delete this car record?', 'Are you sure you want to delete "' + label + '"? This cannot be undone.');
+    if (!ok) return;
     await db.deleteLog(b.dataset.id);
     state.logs = state.logs.filter((x) => x.id !== b.dataset.id);
   },
   'del-rem': async (b) => {
+    const r = state.reminders.find((x) => x.id === b.dataset.id);
+    const label = r ? r.name : 'this reminder';
+    const ok = await confirmDelete('Delete this reminder?', 'Are you sure you want to delete "' + label + '"? This cannot be undone.');
+    if (!ok) return;
     await db.deleteReminder(b.dataset.id);
     state.reminders = state.reminders.filter((x) => x.id !== b.dataset.id);
+  },
+  'edit-log': (b) => {
+    const l = state.logs.find((x) => x.id === b.dataset.id);
+    if (!l) return;
+    const $ = (s) => document.querySelector(s);
+    $('#edit-log-id').value = l.id;
+    $('#edit-log-date').value = l.date;
+    $('#edit-log-odo').value = l.odo;
+    $('#edit-log-type').value = l.type;
+    $('#edit-log-cost').value = l.cost;
+    $('#edit-log-desc').value = l.desc;
+    $('#edit-log-shop').value = l.shop;
+    setMsg('#edit-log-msg', '');
+    $('#edit-log-modal').hidden = false;
+  },
+  'edit-log-cancel': () => {
+    document.querySelector('#edit-log-modal').hidden = true;
   },
   'export-log': () => {
     const rows = filteredLogs().map((l) => [l.date, l.odo, l.type, l.desc, l.shop, l.cost.toFixed(2)]);
@@ -169,6 +196,38 @@ export function initCarForms() {
       rerender();
     } catch (err) {
       showError(err);
+    }
+  });
+
+  $('#edit-log-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = $('#edit-log-id').value;
+    const date = $('#edit-log-date').value;
+    const odo = parseInt($('#edit-log-odo').value, 10);
+    const desc = $('#edit-log-desc').value.trim();
+    let cost = parseFloat($('#edit-log-cost').value);
+    if (!(cost > 0)) cost = 0;
+    if (!(odo >= 0)) { setMsg('#edit-log-msg', 'Enter the odometer reading in km.'); return; }
+    if (!desc) { setMsg('#edit-log-msg', 'Say what was done.'); return; }
+    const type = $('#edit-log-type').value;
+    cost = Math.round(cost * 100) / 100;
+    const btn = e.submitter;
+    if (btn) btn.disabled = true;
+    try {
+      const updated = await db.updateLog({ id, date, odo, type, desc, shop: $('#edit-log-shop').value.trim(), cost });
+      const idx = state.logs.findIndex((x) => x.id === id);
+      if (idx !== -1) state.logs[idx] = updated;
+      if (odo > state.car.odo) {
+        state.car.odo = odo;
+        await db.saveCar(state.car);
+      }
+      $('#edit-log-modal').hidden = true;
+      rerender();
+    } catch (err) {
+      setMsg('#edit-log-msg', '');
+      showError(err);
+    } finally {
+      if (btn) btn.disabled = false;
     }
   });
 }

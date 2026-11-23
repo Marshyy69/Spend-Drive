@@ -162,6 +162,58 @@
 
   <div id="tip" hidden></div>
 
+  <!-- CONFIRM MODAL (double-confirm delete) -->
+  <div class="modal-overlay" id="confirm-modal" hidden>
+    <div class="modal">
+      <h2 id="confirm-title">Delete this entry?</h2>
+      <p id="confirm-body">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn ghost small" type="button" data-action="confirm-cancel">Cancel</button>
+        <button class="btn small btn-danger" type="button" data-action="confirm-ok" id="confirm-ok-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT EXPENSE MODAL -->
+  <div class="modal-overlay" id="edit-exp-modal" hidden>
+    <div class="modal">
+      <h2>Edit expense</h2>
+      <form class="form" id="edit-exp-form" novalidate>
+        <input type="hidden" id="edit-exp-id">
+        <label class="f"><span>Date</span><input type="date" id="edit-exp-date" required></label>
+        <label class="f"><span>Amount (RM)</span><input type="number" id="edit-exp-amt" inputmode="decimal" step="0.01" min="0" placeholder="0.00" required></label>
+        <label class="f"><span>Category</span><select id="edit-exp-cat"></select></label>
+        <label class="f"><span>Note</span><input type="text" id="edit-exp-note" placeholder="e.g. Lunch, RON95, parking" maxlength="80"></label>
+        <div class="formfoot">
+          <button class="btn small" type="submit">Save changes</button>
+          <button class="btn ghost small" type="button" data-action="edit-exp-cancel">Cancel</button>
+          <span class="msg" id="edit-exp-msg" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT CAR LOG MODAL -->
+  <div class="modal-overlay" id="edit-log-modal" hidden>
+    <div class="modal">
+      <h2>Edit car record</h2>
+      <form class="form" id="edit-log-form" novalidate>
+        <input type="hidden" id="edit-log-id">
+        <label class="f"><span>Date</span><input type="date" id="edit-log-date" required></label>
+        <label class="f"><span>Odometer (km)</span><input type="number" id="edit-log-odo" inputmode="numeric" min="0" step="1" placeholder="e.g. 10120" required></label>
+        <label class="f"><span>Type</span><select id="edit-log-type"><option>Service</option><option>Repair</option><option>Other</option></select></label>
+        <label class="f"><span>Cost (RM)</span><input type="number" id="edit-log-cost" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></label>
+        <label class="f"><span>What was done</span><input type="text" id="edit-log-desc" maxlength="100" placeholder="e.g. Engine oil + filter" required></label>
+        <label class="f"><span>Workshop</span><input type="text" id="edit-log-shop" maxlength="60" placeholder="Optional"></label>
+        <div class="formfoot">
+          <button class="btn small" type="submit">Save changes</button>
+          <button class="btn ghost small" type="button" data-action="edit-log-cancel">Cancel</button>
+          <span class="msg" id="edit-log-msg" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

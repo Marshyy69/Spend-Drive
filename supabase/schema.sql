@@ -6,7 +6,7 @@ create table public.expenses (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null default auth.uid() references auth.users(id) on delete cascade,
   date        date not null,
-  category    text not null check (category in ('Food', 'Car', 'Bills', 'Shopping', 'Other')),
+  category    text not null check (category in ('Food', 'Car', 'Bills', 'Shopping', 'Entertainment', 'Other')),
   note        text,
   amount      numeric(12,2) not null check (amount > 0),
   created_at  timestamptz not null default now()

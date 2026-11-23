@@ -5,6 +5,7 @@ import { initAuth } from './auth.js';
 import { loadAll, setUser, signOut } from './db.js';
 import { renderSpending, spendingActions, initSpendingForms } from './spending.js';
 import { renderCar, carActions, initCarForms } from './car.js';
+import { confirmActions } from './confirm.js';
 import { initTooltip } from './tooltip.js';
 import { NOW, DAYS, MONTHS, showStatus, showError } from './utils.js';
 
@@ -52,6 +53,7 @@ function onSignedOut() {
 const actions = {
   ...spendingActions,
   ...carActions,
+  ...confirmActions,
   signout: async () => { await signOut(); },
 };
 

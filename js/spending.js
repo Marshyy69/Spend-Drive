@@ -7,6 +7,7 @@ import {
   NOW, TODAY, MON, CATS, catColor, esc, rm, num, fmtDate, monthKey, sum, clamp, shiftMonth, daysIn,
   monthLabel, niceMax, topRound, tile, setMsg, showError, downloadCsv,
 } from './utils.js';
+import { confirmDelete } from './confirm.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -70,7 +71,8 @@ export function renderSpending() {
   $('#tx-sum').textContent = list.length + (list.length === 1 ? ' entry' : ' entries') + ' · ' + rm(sum(list, (e) => e.amt));
   $('#tx-body').innerHTML = list.length ? list.map((e) =>
     '<tr><td>' + fmtDate(e.date) + '</td><td><span class="tag" style="background:' + catColor(e.cat) + '">' + e.cat + '</span></td><td>' + esc(e.note) + '</td><td class="n">' + rm(e.amt) + '</td>' +
-    '<td class="n"><button class="rm" type="button" data-action="del-exp" data-id="' + e.id + '" aria-label="Remove ' + esc(e.note) + '">Remove</button></td></tr>'
+    '<td class="n"><button class="edit-btn" type="button" data-action="edit-exp" data-id="' + e.id + '" aria-label="Edit ' + esc(e.note) + '">Edit</button>' +
+    '<button class="rm" type="button" data-action="del-exp" data-id="' + e.id + '" aria-label="Remove ' + esc(e.note) + '">Remove</button></td></tr>'
   ).join('') : '<tr><td colspan="5" class="empty">Nothing here for ' + monthLabel(key) + (ui.cat !== 'All' || q ? ' with these filters' : '') + '. Add an expense above.</td></tr>';
 }
 
@@ -116,8 +118,27 @@ export const spendingActions = {
   'cat': (b) => { ui.cat = ui.cat === b.dataset.cat ? 'All' : b.dataset.cat; },
   'chip': (b) => { ui.cat = b.dataset.cat; },
   'del-exp': async (b) => {
+    const e = state.expenses.find((x) => x.id === b.dataset.id);
+    const label = e ? e.note + ' — ' + rm(e.amt) : 'this expense';
+    const ok = await confirmDelete('Delete this expense?', 'Are you sure you want to delete "' + label + '"? This cannot be undone.');
+    if (!ok) return;
     await db.deleteExpense(b.dataset.id);
     state.expenses = state.expenses.filter((x) => x.id !== b.dataset.id);
+  },
+  'edit-exp': (b) => {
+    const e = state.expenses.find((x) => x.id === b.dataset.id);
+    if (!e) return;
+    const $ = (s) => document.querySelector(s);
+    $('#edit-exp-id').value = e.id;
+    $('#edit-exp-date').value = e.date;
+    $('#edit-exp-amt').value = e.amt;
+    $('#edit-exp-cat').value = e.cat;
+    $('#edit-exp-note').value = e.note;
+    setMsg('#edit-exp-msg', '');
+    $('#edit-exp-modal').hidden = false;
+  },
+  'edit-exp-cancel': () => {
+    document.querySelector('#edit-exp-modal').hidden = true;
   },
   'export-exp': () => {
     const rows = state.expenses.slice().sort((a, b) => (a.date < b.date ? 1 : -1))
@@ -128,6 +149,7 @@ export const spendingActions = {
 
 export function initSpendingForms() {
   $('#exp-cat').innerHTML = CATS.map((c) => '<option>' + c.id + '</option>').join('');
+  $('#edit-exp-cat').innerHTML = CATS.map((c) => '<option>' + c.id + '</option>').join('');
   $('#exp-date').value = TODAY;
   $('#tx-q').addEventListener('input', (e) => { ui.q = e.target.value; rerender(); });
 
@@ -150,6 +172,30 @@ export function initSpendingForms() {
       rerender();
     } catch (err) {
       setMsg('#exp-msg', '');
+      showError(err);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  $('#edit-exp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = $('#edit-exp-id').value;
+    const date = $('#edit-exp-date').value;
+    const amt = parseFloat($('#edit-exp-amt').value);
+    if (!(amt > 0)) { setMsg('#edit-exp-msg', 'Enter an amount above 0.'); return; }
+    const cat = $('#edit-exp-cat').value;
+    const note = $('#edit-exp-note').value.trim() || cat;
+    const btn = e.submitter;
+    if (btn) btn.disabled = true;
+    try {
+      const updated = await db.updateExpense({ id, date, cat, note, amt: Math.round(amt * 100) / 100 });
+      const idx = state.expenses.findIndex((x) => x.id === id);
+      if (idx !== -1) state.expenses[idx] = updated;
+      $('#edit-exp-modal').hidden = true;
+      rerender();
+    } catch (err) {
+      setMsg('#edit-exp-msg', '');
       showError(err);
     } finally {
       if (btn) btn.disabled = false;

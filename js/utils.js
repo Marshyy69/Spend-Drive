@@ -17,6 +17,7 @@ export const CATS = [
   { id: 'Car', c: 'var(--p5)' },
   { id: 'Bills', c: 'var(--p4)' },
   { id: 'Shopping', c: 'var(--p2)' },
+  { id: 'Entertainment', c: 'var(--p6)' },
   { id: 'Other', c: 'var(--p3)' },
 ];
 export const TYPEC = { Service: 'var(--p5)', Repair: 'var(--p1)', Other: 'var(--p3)' };

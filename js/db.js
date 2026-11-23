@@ -64,6 +64,13 @@ export async function deleteExpense(id) {
   const { error } = await supabase.from('expenses').delete().eq('id', id);
   if (error) throw error;
 }
+export async function updateExpense(x) {
+  const { data, error } = await supabase.from('expenses')
+    .update({ date: x.date, category: x.cat, note: x.note, amount: x.amt })
+    .eq('id', x.id).select().single();
+  if (error) throw error;
+  return fromExpense(data);
+}
 
 // ---- car records ----
 export async function addLog(x) {
@@ -76,6 +83,13 @@ export async function addLog(x) {
 export async function deleteLog(id) {
   const { error } = await supabase.from('car_logs').delete().eq('id', id);
   if (error) throw error;
+}
+export async function updateLog(x) {
+  const { data, error } = await supabase.from('car_logs')
+    .update({ date: x.date, odometer: x.odo, type: x.type, description: x.desc, workshop: x.shop, cost: x.cost })
+    .eq('id', x.id).select().single();
+  if (error) throw error;
+  return fromLog(data);
 }
 
 // ---- reminders ----
