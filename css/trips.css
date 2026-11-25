@@ -1,0 +1,33 @@
+/* trips.css: the Trips tab, plus the small trip line on the Spending tab */
+
+.pill.neutral { background: var(--surface-2); color: var(--ink-2); }
+
+.tripHead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.tname { font-size: 1.4rem; font-weight: 700; letter-spacing: -.02em; }
+.budgethint { margin-top: 8px; }
+
+.tripcats { display: flex; flex-direction: column; gap: 6px; }
+.catrow { display: grid; grid-template-columns: minmax(84px, auto) 1fr auto; align-items: center; gap: 12px; padding: 6px 10px; }
+.tripactions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn.danger { background: var(--crit-bg); color: var(--crit); border: 1px solid var(--crit); }
+
+.grp { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 4px 0 6px; }
+.triplist { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tripbtn {
+  width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px;
+  padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+  cursor: pointer; text-align: left;
+}
+.tripbtn:hover { background: var(--surface-2); }
+.tripbtn[aria-pressed="true"] { border-color: var(--accent); background: var(--surface-2); }
+.tn, .tt { display: flex; flex-direction: column; min-width: 0; }
+.tt { align-items: flex-end; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tn small, .tt small { font-weight: 400; color: var(--muted); font-size: .78rem; }
+.fx { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Exchange-rate hint under the trip expense form */
+.rate-hint { grid-column: 1 / -1; margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); color: var(--ink-2); font-size: .85rem; }
+
+/* One-line trip reminder on the Spending tab */
+.trip-note { padding: 10px 14px; border-radius: 12px; background: var(--tile3); color: var(--ink); font-size: .88rem; }
+.linkbtn { border: 0; background: transparent; padding: 0; color: var(--accent); font-weight: 600; text-decoration: underline; cursor: pointer; }

@@ -4,12 +4,14 @@
 import { state, ui, rerender } from './state.js';
 import * as db from './db.js';
 import {
-  NOW, TODAY, MON, CATS, catColor, esc, rm, num, fmtDate, monthKey, sum, clamp, shiftMonth, daysIn,
+  NOW, TODAY, MON, CATS, catColor, esc, rm, num, fmtDate, fmtTime, sortExpensesNewest, monthKey, sum, clamp, shiftMonth, daysIn,
   monthLabel, niceMax, topRound, tile, setMsg, showError, downloadCsv,
 } from './utils.js';
 import { confirmDelete } from './confirm.js';
+import { tripNoteHtml } from './trips.js';
 
 const $ = (s) => document.querySelector(s);
+const everyday = () => state.expenses.filter((e) => !e.trip);
 
 export function renderSpending() {
   const key = ui.month;
@@ -17,14 +19,14 @@ export function renderSpending() {
   $('#month-label').textContent = monthLabel(key);
   $('#month-next').disabled = key >= cur;
 
-  const inM = state.expenses.filter((e) => monthKey(e.date) === key);
+  const inM = everyday().filter((e) => monthKey(e.date) === key);
   const total = sum(inM, (e) => e.amt);
 
   // Compare with last month. For the current month, only compare up to the same day.
   const prevKey = shiftMonth(key, -1);
   const cutoff = key === cur ? NOW.getDate() : 99;
   const prevTotal = sum(
-    state.expenses.filter((e) => monthKey(e.date) === prevKey && Number(e.date.slice(8)) <= cutoff),
+  everyday().filter((e) => monthKey(e.date) === prevKey && Number(e.date.slice(8)) <= cutoff),
     (e) => e.amt
   );
   const by = {};
@@ -46,6 +48,10 @@ export function renderSpending() {
     tile('t3', 'Biggest category', total > 0 ? top : '—', total > 0 ? rm(by[top]) + ' (' + Math.round((by[top] / total) * 100) + '%)' : 'Nothing logged yet') +
     tile('t4', 'Daily average', rm(total / Math.max(1, elapsed)), key === cur ? 'per day so far' : 'per day');
 
+  const note = tripNoteHtml(key);
+  $('#sp-trip-note').innerHTML = note;
+  $('#sp-trip-note').hidden = !note;
+
   $('#sp-cats').innerHTML = order.map((id) => {
     const v = by[id];
     const pct = total > 0 ? (v / total) * 100 : 0;
@@ -58,7 +64,7 @@ export function renderSpending() {
 
   const keys = [];
   for (let i = 5; i >= 0; i--) keys.push(shiftMonth(key, -i));
-  const totals = keys.map((k) => sum(state.expenses.filter((e) => monthKey(e.date) === k), (e) => e.amt));
+    const totals = keys.map((k) => sum(everyday().filter((e) => monthKey(e.date) === k), (e) => e.amt));
   $('#sp-trend').innerHTML = trendSvg(keys, totals);
 
   $('#tx-chips').innerHTML = ['All'].concat(CATS.map((c) => c.id)).map((c) => {
@@ -69,19 +75,20 @@ export function renderSpending() {
   const q = ui.q.trim().toLowerCase();
   const list = filteredExpenses();
   $('#tx-sum').textContent = list.length + (list.length === 1 ? ' entry' : ' entries') + ' · ' + rm(sum(list, (e) => e.amt));
-  $('#tx-body').innerHTML = list.length ? list.map((e) =>
-    '<tr><td>' + fmtDate(e.date) + '</td><td><span class="tag" style="background:' + catColor(e.cat) + '">' + e.cat + '</span></td><td>' + esc(e.note) + '</td><td class="n">' + rm(e.amt) + '</td>' +
-    '<td class="n"><button class="edit-btn" type="button" data-action="edit-exp" data-id="' + e.id + '" aria-label="Edit ' + esc(e.note) + '">Edit</button>' +
-    '<button class="rm" type="button" data-action="del-exp" data-id="' + e.id + '" aria-label="Remove ' + esc(e.note) + '">Remove</button></td></tr>'
-  ).join('') : '<tr><td colspan="5" class="empty">Nothing here for ' + monthLabel(key) + (ui.cat !== 'All' || q ? ' with these filters' : '') + '. Add an expense above.</td></tr>';
+  $('#tx-body').innerHTML = list.length ? list.map((e) => {
+    const t = fmtTime(e.createdAt);
+    return '<tr><td>' + fmtDate(e.date) + (t ? '<br><small class="tx-time">' + esc(t) + '</small>' : '') + '</td><td><span class="tag" style="background:' + catColor(e.cat) + '">' + e.cat + '</span></td><td>' + esc(e.note) + '</td><td class="n">' + rm(e.amt) + '</td>' +
+      '<td class="n"><button class="edit-btn" type="button" data-action="edit-exp" data-id="' + e.id + '" aria-label="Edit ' + esc(e.note) + '">Edit</button>' +
+      '<button class="rm" type="button" data-action="del-exp" data-id="' + e.id + '" aria-label="Remove ' + esc(e.note) + '">Remove</button></td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">Nothing here for ' + monthLabel(key) + (ui.cat !== 'All' || q ? ' with these filters' : '') + '. Add an expense above.</td></tr>';
 }
 
 function filteredExpenses() {
   const q = ui.q.trim().toLowerCase();
-  return state.expenses
+  return everyday()
     .filter((e) => monthKey(e.date) === ui.month)
     .filter((e) => (ui.cat === 'All' || e.cat === ui.cat) && (!q || (e.note + ' ' + e.cat).toLowerCase().indexOf(q) > -1))
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    .sort(sortExpensesNewest);
 }
 
 function trendSvg(keys, totals) {
@@ -141,9 +148,9 @@ export const spendingActions = {
     document.querySelector('#edit-exp-modal').hidden = true;
   },
   'export-exp': () => {
-    const rows = state.expenses.slice().sort((a, b) => (a.date < b.date ? 1 : -1))
-      .map((e) => [e.date, e.cat, e.note, e.amt.toFixed(2)]);
-    downloadCsv('expenses-' + TODAY + '.csv', ['Date', 'Category', 'Note', 'Amount (RM)'], rows);
+    const rows = state.expenses.slice().sort(sortExpensesNewest)
+      .map((e) => [e.date, fmtTime(e.createdAt), e.cat, e.note, e.amt.toFixed(2)]);
+    downloadCsv('expenses-' + TODAY + '.csv', ['Date', 'Time', 'Category', 'Note', 'Amount (RM)'], rows);
   },
 };
 

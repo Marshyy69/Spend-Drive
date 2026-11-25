@@ -5,6 +5,7 @@ import { initAuth } from './auth.js';
 import { loadAll, setUser, signOut } from './db.js';
 import { renderSpending, spendingActions, initSpendingForms } from './spending.js';
 import { renderCar, carActions, initCarForms } from './car.js';
+import { renderTrips, tripActions, initTripForms } from './trips.js';
 import { confirmActions } from './confirm.js';
 import { initTooltip } from './tooltip.js';
 import { NOW, DAYS, MONTHS, showStatus, showError } from './utils.js';
@@ -14,15 +15,18 @@ const $ = (s) => document.querySelector(s);
 function render() {
   $('#tab-spending').setAttribute('aria-selected', ui.view === 'spending');
   $('#tab-car').setAttribute('aria-selected', ui.view === 'car');
+  $('#tab-trips').setAttribute('aria-selected', ui.view === 'trips');
   $('#view-spending').hidden = ui.view !== 'spending';
   $('#view-car').hidden = ui.view !== 'car';
+  $('#view-trips').hidden = ui.view !== 'trips';
   if (ui.view === 'spending') renderSpending();
-  else renderCar();
+  else if (ui.view === 'car') renderCar();
+  else renderTrips();
 }
 setRender(render);
 
 function setView(v) {
-  ui.view = v === 'car' ? 'car' : 'spending';
+  ui.view = v === 'car' || v === 'trips' ? v : 'spending';
   render();
 }
 function fromHash() {
@@ -44,7 +48,7 @@ async function onSignedIn(session) {
   fromHash();
 }
 function onSignedOut() {
-  Object.assign(state, { expenses: [], logs: [], reminders: [], car: { odo: 0, interval: 10000, start: 0 } });
+  Object.assign(state, { expenses: [], trips: [], logs: [], reminders: [], car: { odo: 0, interval: 10000, start: 0 } });
   $('#app-view').hidden = true;
   $('#login-view').hidden = false;
 }
@@ -53,6 +57,7 @@ function onSignedOut() {
 const actions = {
   ...spendingActions,
   ...carActions,
+  ...tripActions,
   ...confirmActions,
   signout: async () => { await signOut(); },
 };
@@ -81,4 +86,5 @@ window.addEventListener('hashchange', fromHash);
 initTooltip();
 initSpendingForms();
 initCarForms();
+initTripForms();
 initAuth(onSignedIn, onSignedOut);

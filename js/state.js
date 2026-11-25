@@ -5,6 +5,7 @@ import { TODAY, monthKey } from './utils.js';
 
 export const state = {
   expenses: [], // { id, date, cat, note, amt }
+  trips: [], // { id, name, start, end, budget }
   logs: [], //     { id, date, odo, type, desc, shop, cost }
   reminders: [], // { id, name, due }
   car: { odo: 0, interval: 10000, start: 0 },
@@ -16,6 +17,9 @@ export const ui = {
   cat: 'All',
   q: '',
   logType: 'All',
+  tripId: null,
+  tripEditId: null,
+  tripConfirm: null,
 };
 
 // app.js registers the real render function here so other modules can ask for a redraw.

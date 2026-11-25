@@ -21,7 +21,9 @@ export const CATS = [
   { id: 'Other', c: 'var(--p3)' },
 ];
 export const TYPEC = { Service: 'var(--p5)', Repair: 'var(--p1)', Other: 'var(--p3)' };
-export const catColor = (id) => (CATS.find((c) => c.id === id) || { c: 'var(--p3)' }).c;
+export const TRIP_CATS = ['Food', 'Transport', 'Stay', 'Activities', 'Shopping', 'Other'];
+const TRIP_COLORS = { Transport: 'var(--p5)', Stay: 'var(--p4)', Activities: 'var(--p3)' };
+export const catColor = (id) => (CATS.find((c) => c.id === id) || { c: TRIP_COLORS[id] || 'var(--p3)' }).c;
 
 export const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -33,6 +35,18 @@ export const num = (n) => Math.round(n).toLocaleString('en-US');
 export const fmtDate = (iso) => {
   const p = iso.split('-').map(Number);
   return p[2] + ' ' + MON[p[1] - 1] + ' ' + p[0];
+};
+export const fmtTime = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+};
+export const sortExpensesNewest = (a, b) => {
+  if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+  const ta = a.createdAt ? Date.parse(a.createdAt) || 0 : 0;
+  const tb = b.createdAt ? Date.parse(b.createdAt) || 0 : 0;
+  return tb - ta;
 };
 export const monthKey = (iso) => iso.slice(0, 7);
 export const sum = (a, f) => a.reduce((t, x) => t + f(x), 0);
@@ -56,6 +70,20 @@ export function daysUntil(iso) {
   const t = new Date(p[0], p[1] - 1, p[2]);
   const n = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
   return Math.round((t - n) / 86400000);
+}
+
+export function daysBetween(a, b) {
+  const pa = a.split('-').map(Number);
+  const pb = b.split('-').map(Number);
+  return Math.round((new Date(pb[0], pb[1] - 1, pb[2]) - new Date(pa[0], pa[1] - 1, pa[2])) / 86400000);
+}
+export function fmtRange(a, b) {
+  const p = a.split('-').map(Number);
+  const q = b.split('-').map(Number);
+  if (a === b) return fmtDate(a);
+  if (p[0] === q[0] && p[1] === q[1]) return p[2] + '–' + q[2] + ' ' + MON[p[1] - 1] + ' ' + p[0];
+  if (p[0] === q[0]) return p[2] + ' ' + MON[p[1] - 1] + ' – ' + q[2] + ' ' + MON[q[1] - 1] + ' ' + p[0];
+  return fmtDate(a) + ' – ' + fmtDate(b);
 }
 
 // Chart helpers

@@ -15,7 +15,16 @@ export const signOut = () => supabase.auth.signOut();
 export const getSession = () => supabase.auth.getSession();
 
 // ---- row shapes: database columns -> what the app uses ----
-const fromExpense = (r) => ({ id: r.id, date: r.date, cat: r.category, note: r.note || '', amt: Number(r.amount) });
+const fromExpense = (r) => ({
+  id: r.id, date: r.date, createdAt: r.created_at || null, cat: r.category, note: r.note || '', amt: Number(r.amount),
+  trip: r.trip_id || null,
+  fx: r.foreign_amount == null ? null : Number(r.foreign_amount),
+  fxc: r.foreign_currency || '',
+});
+const fromTrip = (r) => ({
+  id: r.id, name: r.name, start: r.start_date, end: r.end_date,
+  budget: r.budget == null ? null : Number(r.budget),
+});
 const fromLog = (r) => ({
   id: r.id, date: r.date, odo: r.odometer, type: r.type, desc: r.description,
   shop: r.workshop || '', cost: Number(r.cost),
@@ -35,16 +44,27 @@ async function fetchAll(table, orderCol, ascending) {
   return out;
 }
 
+async function fetchTrips() {
+  try {
+    return await fetchAll('trips', 'start_date', false);
+  } catch (err) {
+    console.warn('Trips table not found yet. Run supabase/trips.sql.', err);
+    return [];
+  }
+}
+
 export async function loadAll() {
-  const [e, l, r, c] = await Promise.all([
-    fetchAll('expenses', 'date', false),
-    fetchAll('car_logs', 'odometer', false),
-    fetchAll('reminders', 'due', true),
-    supabase.from('car_settings').select('*').maybeSingle(),
+   const [e, l, r, c, t] = await Promise.all([
+    fetchAll('expenses', 'date', false),                       // e
+    fetchAll('car_logs', 'odometer', false),                   // l
+    fetchAll('reminders', 'due', true),                        // r
+    supabase.from('car_settings').select('*').maybeSingle(),   // c
+    fetchTrips(),                                              // t  (must be last)
   ]);
   if (c.error) throw c.error;
   return {
     expenses: e.map(fromExpense),
+    trips: t.map(fromTrip),
     logs: l.map(fromLog),
     reminders: r.map(fromReminder),
     car: c.data
@@ -55,8 +75,10 @@ export async function loadAll() {
 
 // ---- expenses ----
 export async function addExpense(x) {
-  const { data, error } = await supabase.from('expenses')
-    .insert({ date: x.date, category: x.cat, note: x.note, amount: x.amt }).select().single();
+  const row = { date: x.date, category: x.cat, note: x.note, amount: x.amt };
+  if (x.trip) row.trip_id = x.trip;
+  if (x.fx) { row.foreign_amount = x.fx; row.foreign_currency = x.fxc || null; }
+  const { data, error } = await supabase.from('expenses').insert(row).select().single();
   if (error) throw error;
   return fromExpense(data);
 }
@@ -109,5 +131,23 @@ export async function saveCar(car) {
   const { error } = await supabase.from('car_settings').upsert({
     user_id: userId, odometer: car.odo, service_interval: car.interval, start_odometer: car.start,
   });
+  if (error) throw error;
+}
+
+export async function addTrip(t) {
+  const { data, error } = await supabase.from('trips')
+    .insert({ name: t.name, start_date: t.start, end_date: t.end, budget: t.budget }).select().single();
+  if (error) throw error;
+  return fromTrip(data);
+}
+export async function updateTrip(id, t) {
+  const { data, error } = await supabase.from('trips')
+    .update({ name: t.name, start_date: t.start, end_date: t.end, budget: t.budget })
+    .eq('id', id).select().single();
+  if (error) throw error;
+  return fromTrip(data);
+}
+export async function deleteTrip(id) {
+  const { error } = await supabase.from('trips').delete().eq('id', id);
   if (error) throw error;
 }
